@@ -11,6 +11,9 @@ grab api key from ai studio - https://aistudio.google.com/api-keys
 
 auth for google calendar
 
+- install gcloud using brew install google-cloud-sdk
+- run gcloud auth application-default login
+
 - go to https://console.cloud.google.com/auth/clients
 - create a new client
 - create a new OAuth 2.0 client ID

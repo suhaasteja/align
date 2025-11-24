@@ -27,8 +27,11 @@ if not canvas_api_token or not canvas_domain:
 
 import asyncio
 import nest_asyncio
+import datetime
 
 nest_asyncio.apply()
+
+today = datetime.datetime.now().strftime("%Y-%m-%d")
 
 # Initialize Google Calendar tools
 calendar_toolset = CalendarToolset(
@@ -74,15 +77,39 @@ canvas_mcp_client = McpToolset(
     ]
 )
 
+# {
+#   "mcpServers": {
+#     "google-maps-platform-code-assist": {
+#       "command": "npx",
+#       "args": ["-y", "@googlemaps/code-assist-mcp@latest"]
+#     }
+#   }
+# }
+
+maps_mcp_client = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="npx",
+            args=["-y", "@googlemaps/code-assist-mcp@latest"],
+            env={
+                "PATH": os.environ["PATH"] # Ensure npx can be found
+            }
+        )
+    ),
+    # tool_filter=[
+    #     "maps_list_locations"
+    # ]
+)
+
 # Combine all tools
 # Note: McpToolset is passed as a single item, Calendar tools are a list
-all_tools = calendar_tools + [canvas_mcp_client]
+all_tools = calendar_tools + [canvas_mcp_client] + [maps_mcp_client]
 
 root_agent = Agent(
     model='gemini-2.5-flash',
     name='root_agent',
-    description="A helpful assistant that can manage your Google Calendar and Canvas LMS.",
-    instruction="You are a helpful assistant that can help users manage their Google Calendar and Canvas LMS. You can create, read, update, and delete calendar events, as well as manage courses, assignments, enrollments, and grades in Canvas.",
+    description=f"A helpful assistant that can manage your Google Calendar, Google Maps, and Canvas LMS. Today is {today}.",
+    instruction="You are a helpful assistant that can help users manage their Google Calendar, Google Maps, and Canvas LMS. You can create, read, update, and delete calendar events, as well as manage courses, assignments, enrollments, and grades in Canvas. When scheduling a Google Meet or video conference, ensure you set the 'conferenceDataVersion' parameter to 1 and include 'conferenceData': {'createRequest': {'requestId': '<unique_string>', 'conferenceSolutionKey': {'type': 'hangoutsMeet'}}} in the event body.",
     tools=all_tools,
 )
 
@@ -90,4 +117,4 @@ root_agent = Agent(
 # connect with calendar - done
 # pdf parser
 # canvas lms mcp - done
-
+# jinzcdev/markmap-mcp-server 📇 🏠 - An MCP server built on markmap that converts Markdown to interactive mind maps. Supports multi-format exports (PNG/JPG/SVG), live browser preview, one-click Markdown copy, and dynamic visualization features.
