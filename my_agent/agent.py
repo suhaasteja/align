@@ -96,16 +96,6 @@ canvas_mcp_client = McpToolset(
 )
 
 
-
-# {
-#   "mcpServers": {
-#     "google-maps-platform-code-assist": {
-#       "command": "npx",
-#       "args": ["-y", "@googlemaps/code-assist-mcp@latest"]
-#     }
-#   }
-# }
-
 maps_mcp_client = McpToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
@@ -123,13 +113,16 @@ maps_mcp_client = McpToolset(
 
 # Combine all tools
 # Note: McpToolset is passed as a single item, Calendar tools are a list
-all_tools = [canvas_mcp_client, maps_mcp_client, web_search] + calendar_tools
+all_tools = calendar_tools + [canvas_mcp_client, maps_mcp_client, web_search]
+
+with open("systemPrompt.md", "r") as f:
+    system_behavior = f.read()
 
 root_agent = Agent(
     model='gemini-2.5-flash',
-    name='root_agent',
-    description=f"A helpful assistant that can manage your Google Calendar, Google Maps, and Canvas LMS. Today is {today}.",
-    instruction="You are a helpful assistant that can help users manage their Google Calendar, Google Maps, and Canvas LMS. You can create, read, update, and delete calendar events, as well as manage courses, assignments, enrollments, and grades in Canvas. When scheduling a Google Meet or video conference, ensure you set the 'conferenceDataVersion' parameter to 1 and include 'conferenceData': {'createRequest': {'requestId': '<unique_string>', 'conferenceSolutionKey': {'type': 'hangoutsMeet'}}} in the event body.",
+    name='study_plan_agent',
+    description=f"Generates a study plan using Google Calendar, Google Maps, and Canvas LMS. Today is {today}.",
+    instruction=system_behavior,
     tools=all_tools,
 )
 
