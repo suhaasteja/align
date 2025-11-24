@@ -1,8 +1,13 @@
 import os
 from pathlib import Path
-
+import asyncio
+import nest_asyncio
+import datetime
+from langchain_tavily import TavilySearch
 from dotenv import load_dotenv
 from google.adk.agents.llm_agent import Agent
+from google.adk.tools.langchain_tool import LangchainTool
+from langchain_core.tools import tool
 from google.adk.tools.google_api_tool import CalendarToolset
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
@@ -25,19 +30,31 @@ if not canvas_api_token or not canvas_domain:
         "Missing CANVAS_API_TOKEN or CANVAS_DOMAIN in the environment/.env"
     )
 
-import asyncio
-import nest_asyncio
-import datetime
 
 nest_asyncio.apply()
 
 today = datetime.datetime.now().strftime("%Y-%m-%d")
 
+@tool
+def web_search(query: str) -> str:
+    """ 
+    Used to perform web-search and fetch additional information
+
+    Args:
+        query: The search query to make web-search
+
+    """
+    tavily_search = TavilySearch(max_results=1, topic= "general")
+    tool_response = tavily_search.invoke(query)
+    return tool_response
+
+web_search = LangchainTool(web_search)
+
+
 # Initialize Google Calendar tools
 calendar_toolset = CalendarToolset(
     client_id=client_id,
-    client_secret=client_secret
-)
+    client_secret=client_secret)
 
 calendar_tools = asyncio.run(calendar_toolset.get_tools())
 
@@ -53,6 +70,7 @@ calendar_tools = [
         "calendar_calendar_list_list"
     ]
 ]
+
 
 # Initialize Canvas MCP client
 canvas_mcp_client = McpToolset(
@@ -77,6 +95,8 @@ canvas_mcp_client = McpToolset(
     ]
 )
 
+
+
 # {
 #   "mcpServers": {
 #     "google-maps-platform-code-assist": {
@@ -96,14 +116,14 @@ maps_mcp_client = McpToolset(
             }
         )
     ),
-    # tool_filter=[
-    #     "maps_list_locations"
-    # ]
+    tool_filter=[
+        "maps_list_locations"
+    ]
 )
 
 # Combine all tools
 # Note: McpToolset is passed as a single item, Calendar tools are a list
-all_tools = calendar_tools + [canvas_mcp_client] + [maps_mcp_client]
+all_tools = [canvas_mcp_client, maps_mcp_client, web_search] + calendar_tools
 
 root_agent = Agent(
     model='gemini-2.5-flash',
