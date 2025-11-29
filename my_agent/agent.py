@@ -5,7 +5,6 @@ import nest_asyncio
 import datetime
 from dotenv import load_dotenv
 from google.adk.agents.llm_agent import Agent
-from google.adk.tools.google_api_tool import CalendarToolset
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -13,8 +12,7 @@ from .instruction import ALIGN_INSTRUCTION
 
 load_dotenv()
 
-client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
-client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+google_oauth_credentials = os.getenv("GOOGLE_OAUTH_CREDENTIALS")
 canvas_api_token = os.getenv("CANVAS_API_TOKEN")
 canvas_domain = os.getenv("CANVAS_DOMAIN")
 coda_api_key = os.getenv("CODA_API_KEY")
@@ -22,9 +20,9 @@ coda_api_key = os.getenv("CODA_API_KEY")
 exa_api_key = os.getenv("EXA_API_KEY")
 tavily_api_key = os.getenv("TAVILY_API_KEY")
 
-if not client_id or not client_secret:
+if not google_oauth_credentials:
     raise RuntimeError(
-        "Missing GOOGLE_OAUTH_CLIENT_ID or GOOGLE_OAUTH_CLIENT_SECRET in the environment/.env"
+        "Missing GOOGLE_OAUTH_CREDENTIALS in the environment/.env"
     )
 
 if not canvas_api_token or not canvas_domain:
@@ -55,27 +53,19 @@ nest_asyncio.apply()
 today = datetime.datetime.now().strftime("%Y-%m-%d")
 
 
-# Initialize Google Calendar tools
-calendar_toolset = CalendarToolset(
-    client_id=client_id,
-    client_secret=client_secret)
-
-calendar_tools = asyncio.run(calendar_toolset.get_tools())
-
-
-
-# Filter to essential calendar tools only
-calendar_tools = [
-    t for t in calendar_tools
-    if t.name in [
-        "calendar_events_list",
-        "calendar_events_get",
-        "calendar_events_insert",
-        "calendar_events_update",
-        "calendar_events_delete",
-        "calendar_calendar_list_list"
-    ]
-]
+# Initialize Google Calendar MCP client
+calendar_mcp_client = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="npx",
+            args=["-y", "@cocal/google-calendar-mcp"],
+            env={
+                "GOOGLE_OAUTH_CREDENTIALS": google_oauth_credentials,
+                "PATH": os.environ["PATH"]
+            }
+        )
+    )
+)
 
 
 # Initialize Canvas MCP client
@@ -158,7 +148,7 @@ tavily_mcp_client = McpToolset(
 
 # Combine all tools
 # Note: McpToolset is passed as a single item, Calendar tools are a list
-all_tools = [canvas_mcp_client, coda_mcp_client, exa_mcp_client, tavily_mcp_client] + calendar_tools
+all_tools = [canvas_mcp_client, coda_mcp_client, exa_mcp_client, tavily_mcp_client, calendar_mcp_client]
 
 root_agent = Agent(
     model='gemini-2.5-flash',
