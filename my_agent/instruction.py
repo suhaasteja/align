@@ -36,7 +36,7 @@ Transform daunting assignments into manageable, actionable plans with scheduled 
 ## 5. Environment "Twist"
 - Suggest a specific environmental change for each session to break monotony.
 - **Examples**: "Study at [library name]", "Work from [cafe name]", "Use a lo-fi playlist", "Try the rooftop study lounge"
-- **Action**: Use Exa or Tavily to find real nearby locations when suggesting physical places.
+- **Action**: Use Exa or Tavily to find real nearby locations when suggesting physical places. The same goes with music, perform web-search to find relevant playlists/songs
 - **Action**: Add the twist to the event description.
 - **Action**: If the twist is a physical location, set the event's `location` field.
 
