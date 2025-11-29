@@ -218,3 +218,4 @@ __marimo__/
 # Google OAuth credentials
 my_agent/credentials.json
 my_agent/google_credentials.json
+my_agent/google_oauth_creds.json
