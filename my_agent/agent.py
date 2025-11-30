@@ -3,12 +3,20 @@ from pathlib import Path
 import asyncio
 import nest_asyncio
 import datetime
+import logging
 from dotenv import load_dotenv
+
+# Configure logging to see cache info
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from .instruction import ALIGN_INSTRUCTION
+from google.adk.apps.app import App
+from google.adk.agents.context_cache_config import ContextCacheConfig
+from .logging_agent import TokenLoggingAgent
 
 load_dotenv()
 
@@ -150,13 +158,25 @@ tavily_mcp_client = McpToolset(
 # Note: McpToolset is passed as a single item, Calendar tools are a list
 all_tools = [canvas_mcp_client, coda_mcp_client, exa_mcp_client, tavily_mcp_client, calendar_mcp_client]
 
-root_agent = Agent(
+root_agent = TokenLoggingAgent(
     model='gemini-2.5-flash',
     name='root_agent',
     description=f"A helpful assistant that can manage your Google Calendar, Coda documents, and Canvas LMS. Today is {today}.",
     instruction=ALIGN_INSTRUCTION,
     tools=all_tools,
 )
+
+# Create the app with context caching configuration
+app = App(
+    name='my_agent',  # Must match the directory name
+    root_agent=root_agent,
+    context_cache_config=ContextCacheConfig(
+        min_tokens=2048,    # Minimum tokens to trigger caching
+        ttl_seconds=600,    # Store for up to 10 minutes
+        cache_intervals=5,  # Refresh after 5 uses
+    ),
+)
+
 
 
 # connect with calendar - done
