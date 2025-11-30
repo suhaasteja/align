@@ -22,9 +22,10 @@ class TokenLogger:
         self.query_count += 1
         
         # Extract token counts from usage metadata (Pydantic object)
-        prompt_tokens = getattr(usage_metadata, 'prompt_token_count', 0)
-        candidates_tokens = getattr(usage_metadata, 'candidates_token_count', 0)
-        cached_tokens = getattr(usage_metadata, 'cached_content_token_count', 0)
+        # Use 'or 0' to handle None values
+        prompt_tokens = getattr(usage_metadata, 'prompt_token_count', 0) or 0
+        candidates_tokens = getattr(usage_metadata, 'candidates_token_count', 0) or 0
+        cached_tokens = getattr(usage_metadata, 'cached_content_token_count', 0) or 0
         
         # Update totals
         self.total_input_tokens += prompt_tokens
