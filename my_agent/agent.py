@@ -17,8 +17,11 @@ from .instruction import ALIGN_INSTRUCTION
 from google.adk.apps.app import App
 from google.adk.agents.context_cache_config import ContextCacheConfig
 from .logging_agent import TokenLoggingAgent
+from .langfuse_integration import langfuse_observability
 
 load_dotenv()
+
+langfuse_observability.initialize()
 
 google_oauth_credentials = os.getenv("GOOGLE_OAUTH_CREDENTIALS")
 canvas_api_token = os.getenv("CANVAS_API_TOKEN")
@@ -112,7 +115,7 @@ coda_mcp_client = McpToolset(
                 "PATH": os.environ["PATH"]
             }
         ),
-        timeout=30,
+        timeout=60,
     )
 )
 
@@ -128,7 +131,8 @@ exa_mcp_client = McpToolset(
                 "EXA_API_KEY": exa_api_key,
                 "PATH": os.environ["PATH"]
             }
-        )
+        ),
+        timeout=30,  # Increase timeout to 30s for web searches
     ),
     tool_filter=["web_search_exa", "get_code_context_exa"]
 )
@@ -143,7 +147,8 @@ tavily_mcp_client = McpToolset(
                 "TAVILY_API_KEY": tavily_api_key,
                 "PATH": os.environ["PATH"]
             }
-        )
+        ),
+        timeout=30,  # Increase timeout to 30s for web searches
     )
 )
 

@@ -1,0 +1,5 @@
+google-adk
+langfuse
+openinference-instrumentation-google-adk
+python-dotenv
+nest-asyncio
