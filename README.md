@@ -1,6 +1,8 @@
+# Align - AI Study Companion
 
+![Align Demo](Align_Screenshot.png)
 
-Setup
+## Setup
 
 follow https://google.github.io/adk-docs/get-started/python/  to install google adk
 
