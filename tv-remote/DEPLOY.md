@@ -93,8 +93,23 @@ What you can move to the cloud is the *front door* — see below.
 
 ## Option B — reach it from anywhere (Tailscale)
 
-If what you actually want is "use the remote when I'm not home", the server
-still lives at home; you just need a private path back to it.
+**Do you actually need this?** Probably not. It's a TV remote — you use it in
+the room with the TV, where your phone is already on the same WiFi and the
+plain LAN URL works. Tailscale is worth installing when one of these is true:
+
+- you want to control the TV while you're *out of the house*;
+- your router isolates wireless clients from each other (common on guest
+  networks), so the LAN URL doesn't work at all;
+- you're often on cellular indoors because the WiFi is weak.
+
+If your only worry is "the IP might change", you don't need a VPN. Use the
+`http://<hostname>.local:8477` address the server prints at startup — macOS and
+Raspberry Pi OS advertise it over Bonjour/Avahi and iOS resolves it natively, so
+it survives DHCP handing out a new address. A static DHCP reservation in your
+router does the same job.
+
+If one of the three cases above does apply: the server still lives at home, you
+just need a private path back to it.
 
 [Tailscale](https://tailscale.com) is the least painful way. Install it on the
 server and on your iPhone, sign both into the same account, and the server gets

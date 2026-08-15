@@ -45,6 +45,10 @@ It prints a URL and a QR code:
 **Point your phone camera at the QR code** — it opens the remote. No typing IP
 addresses. The page finds your TV automatically the first time.
 
+It also prints a `http://<hostname>.local:8477` address. Bookmark that one
+rather than the IP — on macOS and Raspberry Pi OS it keeps working after the
+router hands out a new address.
+
 If you'd rather do it by hand: `npm install && npm start`.
 
 ### On an iPhone

@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { timingSafeEqual } from 'node:crypto';
+import { hostname } from 'node:os';
 import qrcode from 'qrcode-terminal';
 
 import * as adapters from './adapters/index.js';
@@ -240,7 +241,19 @@ server.listen(PORT, '0.0.0.0', () => {
   }
 
   const url = `http://${lan}:${PORT}`;
-  console.log(`  On your phone:    ${url}\n`);
+  console.log(`  On your phone:    ${url}`);
+
+  // macOS and Raspberry Pi OS advertise <hostname>.local over Bonjour/Avahi,
+  // and iOS resolves it natively. Unlike the IP, it survives a DHCP change —
+  // worth bookmarking instead. Not every Linux distro runs Avahi, so it's
+  // offered rather than promised.
+  const host = hostname().replace(/\.local$/i, '');
+  if (host && host !== 'localhost') {
+    console.log(`  Or, if this machine does Bonjour/Avahi (macOS and Raspberry Pi OS do):`);
+    console.log(`                    http://${host}.local:${PORT}`);
+    console.log(`  That one keeps working if the router hands out a new IP.`);
+  }
+  console.log('');
 
   // Point a phone camera at this rather than typing an IP address.
   qrcode.generate(url, { small: true }, (qr) => {
