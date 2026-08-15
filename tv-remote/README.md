@@ -36,8 +36,24 @@ It prints two URLs. Open the second one on your phone:
   On your phone:    http://192.168.1.20:8477   <- open this one
 ```
 
-The page finds your TV automatically the first time. On iOS, Share → *Add to
-Home Screen* makes it open fullscreen like a real app.
+The page finds your TV automatically the first time.
+
+### On an iPhone
+
+Open that `http://192.168.x.x:8477` URL in Safari, then **Share → Add to Home
+Screen**. It launches fullscreen with no address bar, so it behaves like a real
+remote app.
+
+Two iOS things worth knowing:
+
+- **No haptics.** Safari has no Vibration API, so presses can't buzz. The button
+  flashes blue instead — that's your press confirmation.
+- **The server still needs a computer.** A Mac, PC or Raspberry Pi on the same
+  WiFi has to be running `npm start`. An iPhone alone can't do it; iOS won't let
+  Safari open the raw network connections the TV protocols need. A Raspberry Pi
+  Zero left plugged in behind the TV is the usual fix.
+
+Add to Home Screen is per-browser: it must be Safari, not Chrome on iOS.
 
 ## Supported TVs
 

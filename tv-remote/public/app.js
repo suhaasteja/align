@@ -51,7 +51,9 @@ function closeSheet() {
 $('backdrop').addEventListener('click', closeSheet);
 
 function buzz(ms = 12) {
-  // Physical remotes have a click. This is the closest we get.
+  // Physical remotes have a click. This is the closest we get — and on iOS
+  // Safari there's no Vibration API at all, so the `.hit` flash below is the
+  // only press feedback those users get. Keep it visible.
   if (navigator.vibrate) navigator.vibrate(ms);
 }
 
