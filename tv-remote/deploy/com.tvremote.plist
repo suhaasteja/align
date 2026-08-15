@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd agent for macOS — keeps the remote running and restarts it at login.
+
+    cp deploy/com.tvremote.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.tvremote.plist
+
+  Replace YOURNAME with your macOS short username, and check `which node`
+  matches the path below (Homebrew on Apple silicon uses /opt/homebrew/bin).
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tvremote</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/node</string>
+        <string>/Users/YOURNAME/tv-remote/server/index.js</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/YOURNAME/tv-remote</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PORT</key>
+        <string>8477</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/tv-remote.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/tv-remote.err</string>
+</dict>
+</plist>

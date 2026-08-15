@@ -1,0 +1,26 @@
+services:
+  tv-remote:
+    build: .
+    image: tv-remote
+    container_name: tv-remote
+    restart: unless-stopped
+
+    # Host networking is not optional here. The container has to send SSDP
+    # multicast onto your LAN and open connections to the TV's 192.168.x.x
+    # address; Docker's default bridge network can do neither.
+    #
+    # This works on Linux (Raspberry Pi, NAS, any Linux box). It does NOT work
+    # properly on Docker Desktop for Mac or Windows, where the "host" is a
+    # hidden Linux VM rather than your actual machine — there, run it with
+    # `npm start` directly instead of in Docker.
+    network_mode: host
+
+    volumes:
+      - tv-remote-data:/data
+
+    environment:
+      - PORT=8477
+      - TV_REMOTE_HOME=/data
+
+volumes:
+  tv-remote-data:

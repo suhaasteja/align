@@ -55,6 +55,15 @@ Two iOS things worth knowing:
 
 Add to Home Screen is per-browser: it must be Safari, not Chrome on iOS.
 
+### Keeping it running
+
+Leaving a terminal open forever isn't much of a plan. [DEPLOY.md](DEPLOY.md)
+covers running it as a background service (systemd, launchd or Docker), and how
+to reach it from outside the house with Tailscale.
+
+It also explains why GitHub Pages and other static hosts can't run this — short
+version: controlling a device on your LAN requires code running on your LAN.
+
 ## Supported TVs
 
 | Brand | How it connects | What pairing looks like |
