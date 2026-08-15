@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TV Remote</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <button id="devicePicker" class="device" aria-haspopup="dialog">
+    <span class="dot" id="statusDot"></span>
+    <span class="device-name" id="deviceName">No TV yet</span>
+    <svg viewBox="0 0 24 24" class="chev" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+</header>
+
+<main id="remote" class="remote" hidden>
+
+  <section class="row row-top">
+    <button class="btn round danger" data-key="power" aria-label="Power">
+      <svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg>
+    </button>
+    <button class="btn round" data-key="input" aria-label="Input">
+      <svg viewBox="0 0 24 24"><path d="M4 7h11l-3-3"/><path d="M20 17H9l3 3"/></svg>
+    </button>
+    <button class="btn round" data-key="mute" aria-label="Mute">
+      <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
+    </button>
+  </section>
+
+  <section class="dpad-wrap">
+    <div class="dpad" role="group" aria-label="Direction pad">
+      <button class="dbtn up"    data-key="up"    aria-label="Up"><svg viewBox="0 0 24 24"><path d="M12 19V6M5 12l7-7 7 7"/></svg></button>
+      <button class="dbtn left"  data-key="left"  aria-label="Left"><svg viewBox="0 0 24 24"><path d="M19 12H6M12 5l-7 7 7 7"/></svg></button>
+      <button class="dbtn ok"    data-key="ok"    aria-label="OK">OK</button>
+      <button class="dbtn right" data-key="right" aria-label="Right"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 5l7 7-7 7"/></svg></button>
+      <button class="dbtn down"  data-key="down"  aria-label="Down"><svg viewBox="0 0 24 24"><path d="M12 5v13M5 12l7 7 7-7"/></svg></button>
+    </div>
+  </section>
+
+  <section class="row">
+    <button class="btn pill" data-key="back" aria-label="Back">
+      <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+    </button>
+    <button class="btn pill" data-key="home" aria-label="Home">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    </button>
+    <button class="btn pill" data-key="menu" aria-label="Menu">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </section>
+
+  <section class="rockers">
+    <div class="rocker" aria-label="Volume">
+      <button class="rk" data-key="volume_up" aria-label="Volume up"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <span class="rk-label">VOL</span>
+      <button class="rk" data-key="volume_down" aria-label="Volume down"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    </div>
+    <div class="rocker" aria-label="Channel">
+      <button class="rk" data-key="channel_up" aria-label="Channel up"><svg viewBox="0 0 24 24"><path d="M12 19V6M5 12l7-7 7 7"/></svg></button>
+      <span class="rk-label">CH</span>
+      <button class="rk" data-key="channel_down" aria-label="Channel down"><svg viewBox="0 0 24 24"><path d="M12 5v13M5 12l7 7 7-7"/></svg></button>
+    </div>
+  </section>
+
+  <section class="row transport">
+    <button class="btn small" data-key="rewind" aria-label="Rewind"><svg viewBox="0 0 24 24"><path d="M11 6 4 12l7 6zM20 6l-7 6 7 6z"/></svg></button>
+    <button class="btn small" data-key="play_pause" aria-label="Play or pause"><svg viewBox="0 0 24 24"><path d="M7 4v16M17 4v16"/></svg></button>
+    <button class="btn small" data-key="forward" aria-label="Fast forward"><svg viewBox="0 0 24 24"><path d="M13 6l7 6-7 6zM4 6l7 6-7 6z"/></svg></button>
+  </section>
+
+  <section class="extras">
+    <button class="link" id="toggleNumpad" hidden>Numbers</button>
+    <button class="link" id="toggleApps" hidden>Apps</button>
+    <button class="link" id="toggleKeyboard" hidden>Type</button>
+  </section>
+
+  <section class="numpad" id="numpad" hidden>
+    <button class="btn num" data-key="num_1">1</button>
+    <button class="btn num" data-key="num_2">2</button>
+    <button class="btn num" data-key="num_3">3</button>
+    <button class="btn num" data-key="num_4">4</button>
+    <button class="btn num" data-key="num_5">5</button>
+    <button class="btn num" data-key="num_6">6</button>
+    <button class="btn num" data-key="num_7">7</button>
+    <button class="btn num" data-key="num_8">8</button>
+    <button class="btn num" data-key="num_9">9</button>
+    <button class="btn num wide" data-key="num_0">0</button>
+  </section>
+
+  <section class="apps" id="apps" hidden></section>
+
+  <section class="keyboard" id="keyboard" hidden>
+    <input type="text" id="textInput" placeholder="Type, then send to the TV" autocomplete="off" autocapitalize="off" autocorrect="off">
+    <button class="btn send" id="sendText">Send</button>
+  </section>
+</main>
+
+<div class="empty" id="empty">
+  <div class="empty-inner">
+    <svg viewBox="0 0 24 24" class="tv-icon"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    <h1>Find your TV</h1>
+    <p>Your phone and TV need to be on the same WiFi. This takes about 15 seconds.</p>
+    <button class="btn primary" id="scanBtn">Scan my network</button>
+    <p class="scan-status" id="scanStatus"></p>
+    <button class="link" id="manualBtn">Add by IP address instead</button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="backdrop" hidden></div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

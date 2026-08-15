@@ -1,0 +1,374 @@
+/* A remote is used one-handed, in the dark, without looking. That drives every
+   choice here: dark by default, no button under 56px, generous gaps so a
+   thumb-miss doesn't change the channel, and a visible press state because
+   there's a network round-trip before anything happens on screen. */
+
+:root {
+  --bg: #0b0d12;
+  --surface: #161a23;
+  --surface-hi: #1f2430;
+  --edge: #2a3040;
+  --text: #e8ecf4;
+  --muted: #8b94a8;
+  --accent: #5b8cff;
+  --danger: #ff5a5f;
+  --ok: #3ddc84;
+  --radius: 18px;
+  --tap: 64px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Several panels below set `display` on a class, which would otherwise beat the
+   user-agent rule for [hidden] and leave them on screen. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 500 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---------- top bar ---------- */
+
+.bar {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 4px;
+}
+
+.device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+
+.device-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.dot {
+  width: 8px; height: 8px; flex: none;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.dot.online { background: var(--ok); }
+.dot.warn { background: #ffb020; }
+
+.chev { width: 16px; height: 16px; flex: none; stroke: var(--muted); fill: none; stroke-width: 2; }
+
+/* ---------- remote body ---------- */
+
+.remote {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 20px 28px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  height: var(--tap);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 18px;
+  transition: transform .06s ease, background .12s ease;
+}
+
+.btn svg, .dbtn svg, .rk svg {
+  width: 24px; height: 24px;
+  fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.btn.round { border-radius: 50%; width: var(--tap); }
+.btn.pill { flex: 1; max-width: 108px; }
+.btn.small { width: 60px; height: 54px; }
+.btn.danger { color: var(--danger); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 0 28px; }
+
+/* Pressed state has to be unmistakable — the TV reacts a beat later. */
+.btn:active, .dbtn:active, .rk:active { transform: scale(.94); background: var(--surface-hi); }
+.btn.hit, .dbtn.hit, .rk.hit { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Buttons this TV brand can't perform. Kept in place rather than removed so the
+   layout doesn't reshuffle between devices. */
+.unsupported { opacity: .25; pointer-events: none; }
+
+/* ---------- d-pad ---------- */
+
+.dpad-wrap { display: flex; justify-content: center; width: 100%; }
+
+.dpad {
+  position: relative;
+  width: min(74vw, 280px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  place-items: center;
+}
+
+.dbtn {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  transition: transform .06s ease, background .12s ease;
+}
+
+.dbtn.up    { grid-area: 1 / 2; }
+.dbtn.left  { grid-area: 2 / 1; }
+.dbtn.ok    { grid-area: 2 / 2; }
+.dbtn.right { grid-area: 2 / 3; }
+.dbtn.down  { grid-area: 3 / 2; }
+
+.dbtn.ok {
+  background: var(--surface-hi);
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: .5px;
+  width: 84%;
+  height: 84%;
+}
+
+/* ---------- rockers ---------- */
+
+.rockers { display: flex; gap: 26px; justify-content: center; width: 100%; }
+
+.rocker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  overflow: hidden;
+  flex: 1;
+  max-width: 92px;
+}
+
+.rk {
+  width: 100%;
+  height: 62px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .06s ease, background .12s ease;
+}
+
+.rk-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
+/* ---------- extras ---------- */
+
+.extras { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+.link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  padding: 8px 4px;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+.btn.num { width: 100%; height: 58px; font-size: 20px; }
+.btn.num.wide { grid-column: 2; }
+
+.apps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+.app {
+  padding: 14px 12px;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.keyboard { display: flex; gap: 10px; width: 100%; }
+.keyboard input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 14px;
+  height: 54px;
+  border-radius: 14px;
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+.btn.send { padding: 0 20px; height: 54px; min-width: 0; }
+
+/* ---------- empty state ---------- */
+
+.empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.empty-inner { text-align: center; max-width: 340px; }
+.tv-icon { width: 56px; height: 56px; stroke: var(--muted); fill: none; stroke-width: 1.5; stroke-linecap: round; }
+.empty h1 { font-size: 22px; margin: 16px 0 8px; }
+.empty p { color: var(--muted); font-size: 15px; margin: 0 0 20px; }
+.scan-status { min-height: 20px; font-size: 14px; margin: 14px 0 0 !important; }
+
+/* ---------- sheet ---------- */
+
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 10;
+}
+
+.sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 11;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  border-top: 1px solid var(--edge);
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+  max-height: 82vh;
+  overflow-y: auto;
+  animation: rise .22s ease;
+}
+@keyframes rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: var(--edge);
+  border-radius: 2px;
+  margin: 4px auto 16px;
+}
+
+.sheet h2 { font-size: 18px; margin: 0 0 4px; }
+.sheet p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+.dev-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.dev-item.active { border-color: var(--accent); }
+.dev-meta { flex: 1; min-width: 0; }
+.dev-meta small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.badge { font-size: 11px; color: #ffb020; border: 1px solid #ffb020; border-radius: 999px; padding: 2px 8px; flex: none; }
+
+.sheet input[type="text"], .sheet input[type="tel"], .sheet select {
+  width: 100%;
+  height: 54px;
+  padding: 0 14px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--edge);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+.sheet .btn.primary { width: 100%; }
+.sheet .row-actions { display: flex; gap: 10px; margin-top: 4px; }
+.sheet .row-actions .btn { flex: 1; }
+
+.pin-input { text-align: center; font-size: 26px !important; letter-spacing: 10px; }
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: 88vw;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #23293a;
+  border: 1px solid var(--edge);
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,.5);
+}
+.toast.error { background: #3a1f22; border-color: var(--danger); }
+
+/* Short screens: shrink the d-pad before anything else, it has the most slack. */
+@media (max-height: 700px) {
+  :root { --tap: 56px; }
+  .remote { gap: 12px; }
+  .dpad { width: min(58vw, 220px); }
+  .rk { height: 54px; }
+}

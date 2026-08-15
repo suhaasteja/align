@@ -1,0 +1,138 @@
+# TV Remote
+
+Lost the remote. Control the TV from your phone's browser instead.
+
+<img src="docs/screenshot.png" width="280" alt="The remote UI on a phone">
+
+## Why it works this way
+
+Phones don't have IR blasters, so nothing on your phone can pretend to be the
+original remote. What smart TVs *do* have is a network control API. So:
+
+```
+your phone  ──HTTP──>  this server        ──TV's own protocol──>  your TV
+(any browser)          (laptop / Pi on the same WiFi)
+```
+
+You run the server on any always-on-ish machine on your network — a laptop is
+fine — and open a web page on your phone. No app store, no account, nothing
+leaves your network.
+
+## Setup
+
+Requires Node 18 or newer.
+
+```bash
+git clone <this repo>
+cd tv-remote
+npm install
+npm start
+```
+
+It prints two URLs. Open the second one on your phone:
+
+```
+  On this machine:  http://localhost:8477
+  On your phone:    http://192.168.1.20:8477   <- open this one
+```
+
+The page finds your TV automatically the first time. On iOS, Share → *Add to
+Home Screen* makes it open fullscreen like a real app.
+
+## Supported TVs
+
+| Brand | How it connects | What pairing looks like |
+|---|---|---|
+| **Roku** (incl. Roku-branded TCL/Hisense/Onn) | ECP on port 8060 | None — works immediately |
+| **Samsung** (2016+, Tizen) | WebSocket on 8002 | TV shows *Allow this device?* — accept it |
+| **LG** (2014+, webOS) | WebSocket on 3001 | TV shows a prompt — accept it |
+| **Vizio** SmartCast | HTTPS on 7345 | TV shows a 4-digit PIN — type it in |
+| **Sony** Bravia | IRCC over HTTP | You set a Pre-Shared Key on the TV first |
+
+Pairing happens once. Tokens are stored in `~/.tv-remote/devices.json`
+(mode 0600) so the TV stops asking.
+
+### Sony: setting the pre-shared key
+
+On the TV: **Settings → Network → Home Network Setup → IP Control**. Set
+*Authentication* to "Normal and Pre-Shared Key", pick any key you like, then
+enter that same key in the app when it asks.
+
+### Not supported
+
+**Android TV / Google TV** (Sony's newer sets, Chromecast with Google TV, most
+Philips/Sharp) uses a protocol that needs a TLS client certificate negotiated
+through an on-screen pairing code. It's a bigger job than the rest and isn't
+implemented — [`androidtv-remote`](https://github.com/louis49/androidtv-remote)
+is the reference if you want to add it. **Fire TV** would need ADB. Pre-2016
+Samsungs speak a different, older protocol.
+
+## Using it
+
+Everything is where you'd expect. A few things that aren't obvious:
+
+- **Press and hold** volume, channel and the arrows to repeat, like a real remote.
+- **Apps** (Roku only) launches Netflix, YouTube etc. directly.
+- **Type** (Roku only) sends real text, so you don't have to peck out a search
+  query with the D-pad.
+- Buttons your TV brand can't do are greyed out rather than failing on press.
+  Vizio has no HOME, for instance — use **input** to reach the SmartCast hub.
+- The tab responds to a physical keyboard too: arrows, Enter, Escape, `+`/`-`,
+  `m`, space.
+
+### Power on
+
+Turning a TV *off* always works. Turning one back *on* often doesn't — most TVs
+drop off the network when they sleep, so there's nothing left to send a command
+to. Roku and Samsung generally wake; LG needs Wake-on-LAN enabled
+(*Settings → General → Mobile TV On*) which this doesn't send yet.
+
+## If it can't find your TV
+
+1. **Same network?** Phone, server and TV all on the same WiFi. Guest networks
+   and "AP isolation" on the router will silently block this.
+2. **Add it by IP.** Discovery uses SSDP plus a subnet sweep, and some routers
+   block the multicast SSDP relies on. Get the TV's IP from
+   *Settings → Network → Status* on the TV, then use **Add by IP address**.
+3. **Check the TV's setting.** Roku: *Settings → System → Advanced → Control by
+   mobile apps* must be Enabled. Samsung: *General → External Device Manager →
+   Device Connection Manager*. Vizio/Sony need the steps above.
+4. **Wider than a /24?** The sweep only scans /24 and smaller. Add by IP.
+
+Command-line scan, useful for checking whether the problem is the network or the
+browser:
+
+```bash
+npm run scan
+```
+
+## Security
+
+There's no authentication. Anyone who can reach the port can control your TV.
+On a normal home network that's the same set of people who could pick up the
+real remote, which is why it's built this way — but don't port-forward it to the
+internet, and think twice on a shared or office network.
+
+Pairing tokens are stored locally and never sent to the browser. TV control
+traffic skips certificate verification, because Samsung and Vizio ship
+self-signed certs with no way to install a CA; that's scoped to TV requests
+only, not the whole process.
+
+## Development
+
+```bash
+npm test     # smoke tests against a mock Roku — no hardware needed
+npm start    # PORT=... to change the port
+```
+
+Adding a brand means one file in `server/adapters/` exporting `probe`,
+`sendKey`, `supportedKeys` and optionally `pair`. Register it in
+`server/adapters/index.js`; the UI adapts on its own from what the adapter
+declares.
+
+The key vocabulary the UI speaks is in `server/keys.js` — adapters translate it
+into whatever their TV actually wants.
+
+## License
+
+MIT
