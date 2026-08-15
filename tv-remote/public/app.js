@@ -15,14 +15,56 @@ const state = {
 /* ---------------- API ---------------- */
 
 async function api(path, { method = 'GET', body } = {}) {
+  const headers = {};
+  if (body) headers['Content-Type'] = 'application/json';
+  const pin = localStorage.getItem('tv-remote:pin');
+  if (pin) headers['x-remote-pin'] = pin;
+
   const res = await fetch(`/api${path}`, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: Object.keys(headers).length ? headers : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    // Stored PIN is wrong or the server started requiring one. Ask again.
+    localStorage.removeItem('tv-remote:pin');
+    promptPin();
+    throw new Error('PIN required');
+  }
   if (!res.ok) throw new Error(data.error || `request failed (${res.status})`);
   return data;
+}
+
+function promptPin() {
+  openSheet(`
+    <h2>Enter PIN</h2>
+    <p>This remote is protected. The PIN is printed in the terminal where the server is running.</p>
+    <input type="tel" id="accessPin" class="pin-input" placeholder="000000" inputmode="numeric" autocomplete="off">
+    <button class="btn primary" id="accessBtn">Unlock</button>
+  `);
+  $('accessPin').focus();
+
+  const submit = async () => {
+    const value = $('accessPin').value.trim();
+    if (!value) return;
+    $('accessBtn').disabled = true;
+    const res = await fetch('/api/auth', { headers: { 'x-remote-pin': value } });
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) {
+      localStorage.setItem('tv-remote:pin', value);
+      closeSheet();
+      init();
+    } else {
+      $('accessBtn').disabled = false;
+      $('accessPin').value = '';
+      toast('Wrong PIN', true);
+    }
+  };
+
+  $('accessBtn').addEventListener('click', submit);
+  $('accessPin').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
 }
 
 /* ---------------- chrome ---------------- */
@@ -413,8 +455,18 @@ function escapeHtml(s) {
 
 /* ---------------- boot ---------------- */
 
-(async function init() {
+async function init() {
   try {
+    // If the server wants a PIN and we don't have a good one, ask before
+    // anything else — every other call would 401.
+    const auth = await fetch('/api/auth', {
+      headers: { 'x-remote-pin': localStorage.getItem('tv-remote:pin') || '' },
+    }).then((r) => r.json()).catch(() => ({ required: false, ok: true }));
+    if (auth.required && !auth.ok) {
+      localStorage.removeItem('tv-remote:pin');
+      return promptPin();
+    }
+
     const brands = await api('/brands');
     state.brands = Object.fromEntries(brands.map((b) => [b.brand, b]));
     await refreshDevices();
@@ -429,4 +481,6 @@ function escapeHtml(s) {
   } catch (err) {
     toast(err.message, true);
   }
-})();
+}
+
+init();

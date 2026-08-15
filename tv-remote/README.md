@@ -25,18 +25,27 @@ Requires Node 18 or newer.
 ```bash
 git clone <this repo>
 cd tv-remote
-npm install
-npm start
+bash install.sh
 ```
 
-It prints two URLs. Open the second one on your phone:
+That checks Node, installs dependencies and starts the server. Add
+`--service` to also register it as an autostart service (systemd on Linux,
+launchd on macOS) so it survives reboots.
+
+It prints a URL and a QR code:
 
 ```
-  On this machine:  http://localhost:8477
-  On your phone:    http://192.168.1.20:8477   <- open this one
+  On your phone:    http://192.168.1.20:8477
+
+  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  █ ▄▄▄▄▄ █▄▀▀▄▄▀▀█▄█ ▄▄▄▄▄ █
+  ...
 ```
 
-The page finds your TV automatically the first time.
+**Point your phone camera at the QR code** — it opens the remote. No typing IP
+addresses. The page finds your TV automatically the first time.
+
+If you'd rather do it by hand: `npm install && npm start`.
 
 ### On an iPhone
 
@@ -133,10 +142,23 @@ npm run scan
 
 ## Security
 
-There's no authentication. Anyone who can reach the port can control your TV.
-On a normal home network that's the same set of people who could pick up the
-real remote, which is why it's built this way — but don't port-forward it to the
-internet, and think twice on a shared or office network.
+By default there's no authentication. Anyone who can reach the port can control
+your TV — on a home network that's the same set of people who could pick up the
+real remote, which is why it's the default.
+
+Set a PIN if the remote will be reachable beyond your own LAN (a VPN, a tunnel,
+a shared flat, an office):
+
+```bash
+TV_REMOTE_PIN=428913 npm start
+```
+
+The page asks for it once and remembers it. API calls without a valid PIN get a
+401; the page itself still loads, since otherwise there'd be nowhere to type it.
+Comparison is constant-time.
+
+A PIN makes a tunnel reasonable. It is still not a reason to port-forward this
+to the open internet — use Tailscale, see [DEPLOY.md](DEPLOY.md).
 
 Pairing tokens are stored locally and never sent to the browser. TV control
 traffic skips certificate verification, because Samsung and Vizio ship

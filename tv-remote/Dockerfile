@@ -14,6 +14,7 @@ COPY public ./public
 ENV TV_REMOTE_HOME=/data
 VOLUME /data
 
+# Set TV_REMOTE_PIN here or in compose if the remote will be reachable off-LAN.
 ENV PORT=8477
 EXPOSE 8477
 

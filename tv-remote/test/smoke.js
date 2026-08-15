@@ -205,6 +205,48 @@ test('DELETE forgets a device', async () => {
   assert.equal(list.body.find((d) => d.id === 'roku:127.0.0.1'), undefined);
 });
 
+/* ---------- optional PIN ---------- */
+
+// The PIN is read at module load, so it needs its own server process.
+test('TV_REMOTE_PIN gates the API but not the page itself', async () => {
+  const { spawn } = await import('node:child_process');
+  const port = 8482;
+  const child = spawn(process.execPath, [new URL('../server/index.js', import.meta.url).pathname], {
+    env: { ...process.env, PORT: String(port), TV_REMOTE_PIN: 's3cret' },
+    stdio: 'ignore',
+  });
+
+  try {
+    // Wait for it to bind.
+    for (let i = 0; i < 40; i++) {
+      try { await fetch(`http://127.0.0.1:${port}/api/auth`); break; } catch { await new Promise((r) => setTimeout(r, 100)); }
+    }
+
+    const noPin = await fetch(`http://127.0.0.1:${port}/api/devices`);
+    assert.equal(noPin.status, 401, 'API must reject a request with no PIN');
+
+    const wrongPin = await fetch(`http://127.0.0.1:${port}/api/devices`, { headers: { 'x-remote-pin': 'nope' } });
+    assert.equal(wrongPin.status, 401, 'API must reject a wrong PIN');
+
+    const goodPin = await fetch(`http://127.0.0.1:${port}/api/devices`, { headers: { 'x-remote-pin': 's3cret' } });
+    assert.equal(goodPin.status, 200, 'API must accept the right PIN');
+
+    // The page has to load unauthenticated, or there's no way to type the PIN.
+    const page = await fetch(`http://127.0.0.1:${port}/`);
+    assert.equal(page.status, 200, 'static files must remain reachable');
+
+    const probe = await fetch(`http://127.0.0.1:${port}/api/auth`).then((r) => r.json());
+    assert.deepEqual(probe, { required: true, ok: false });
+  } finally {
+    child.kill();
+  }
+});
+
+test('with no PIN configured the API stays open', async () => {
+  const probe = await call('/api/auth');
+  assert.deepEqual(probe.body, { required: false, ok: true });
+});
+
 /* ---------- runner ---------- */
 
 await new Promise((r) => mockTv.listen(8060, '127.0.0.1', r));

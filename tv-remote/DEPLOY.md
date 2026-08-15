@@ -96,8 +96,22 @@ manufacturer's own app: the Roku app, LG ThinQ, Samsung SmartThings, or the
 Vizio SmartCast app. They route through the vendor's cloud, so they need no
 server of yours. That's the tradeoff — their servers instead of yours.
 
-## Don't port-forward it
+## Set a PIN before exposing it anywhere
 
-There's no authentication (see the README). Forwarding port 8477 through your
-router puts an unauthenticated TV controller on the public internet, where it
-will be found by scanners within hours. Use Tailscale.
+Whichever remote-access route you take, turn on the shared secret first:
+
+```bash
+TV_REMOTE_PIN=428913 npm start
+# or, with the installer:
+TV_REMOTE_PIN=428913 bash install.sh --service
+```
+
+The page prompts once and stores it. Without it, anything that can reach the
+port can control your TV.
+
+## Still don't port-forward it
+
+Even with a PIN, forwarding port 8477 through your router puts a TV controller
+on the public internet, where scanners will find it within hours. A PIN is a
+speed bump, not a front door. Tailscale keeps it off the public internet
+entirely, which is a different and much better guarantee.

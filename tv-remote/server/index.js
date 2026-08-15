@@ -8,6 +8,8 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { timingSafeEqual } from 'node:crypto';
+import qrcode from 'qrcode-terminal';
 
 import * as adapters from './adapters/index.js';
 import { discover, localAddresses } from './discovery.js';
@@ -16,6 +18,20 @@ import { isKey } from './keys.js';
 
 const ROOT = fileURLToPath(new URL('../public/', import.meta.url));
 const PORT = Number(process.env.PORT || 8477);
+
+// Optional shared secret. Unset (the default) means no auth, which is fine on a
+// home LAN. Set it before exposing the remote through a tunnel or VPN — see
+// DEPLOY.md. The browser stores it and sends it on every API call.
+const PIN = process.env.TV_REMOTE_PIN || '';
+
+function pinOk(supplied) {
+  if (!PIN) return true;
+  const a = Buffer.from(String(supplied || ''));
+  const b = Buffer.from(PIN);
+  // Compare in constant time, but only when lengths match — timingSafeEqual
+  // throws otherwise, and the length itself is not the secret.
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -167,6 +183,16 @@ const server = http.createServer(async (req, res) => {
 
   if (!url.pathname.startsWith('/api/')) return serveStatic(req, res, url.pathname);
 
+  // Lets the page discover whether it needs to ask for a PIN, and verify one.
+  if (url.pathname === '/api/auth') {
+    const supplied = req.headers['x-remote-pin'];
+    return send(res, 200, { required: Boolean(PIN), ok: pinOk(supplied) });
+  }
+
+  if (!pinOk(req.headers['x-remote-pin'])) {
+    return send(res, 401, { error: 'PIN required' });
+  }
+
   for (const [method, pattern, handler] of routes) {
     const match = url.pathname.match(pattern);
     if (!match) continue;
@@ -207,7 +233,21 @@ server.listen(PORT, '0.0.0.0', () => {
   const lan = localAddresses()[0]?.address;
   console.log('\n  TV Remote is running.\n');
   console.log(`  On this machine:  http://localhost:${PORT}`);
-  if (lan) console.log(`  On your phone:    http://${lan}:${PORT}   <- open this one\n`);
-  else console.log('  Could not detect a LAN address; check that WiFi is connected.\n');
+
+  if (!lan) {
+    console.log('  Could not detect a LAN address; check that WiFi is connected.\n');
+    return;
+  }
+
+  const url = `http://${lan}:${PORT}`;
+  console.log(`  On your phone:    ${url}\n`);
+
+  // Point a phone camera at this rather than typing an IP address.
+  qrcode.generate(url, { small: true }, (qr) => {
+    console.log(qr.split('\n').map((line) => `  ${line}`).join('\n'));
+  });
+
+  console.log('  Scan the code above with your phone camera.');
+  if (PIN) console.log(`  Access PIN: ${PIN}  (the page will ask for it once)`);
   console.log('  Phone and TV must be on the same network. Ctrl+C to stop.\n');
 });
