@@ -21,6 +21,25 @@ services:
     environment:
       - PORT=8477
       - TV_REMOTE_HOME=/data
+      # Strongly recommended if you pair this with the tunnel profile below.
+      - TV_REMOTE_PIN=${TV_REMOTE_PIN:-}
+
+  # Optional: a public HTTPS URL via Cloudflare Tunnel, without port forwarding.
+  #
+  #   TUNNEL_TOKEN=... docker compose --profile tunnel up -d
+  #
+  # Create the tunnel and token at one.dash.cloudflare.com > Networks > Tunnels,
+  # pointing it at http://localhost:8477. Set TV_REMOTE_PIN before enabling
+  # this, and ideally put Cloudflare Access in front of the hostname too.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: tv-remote-tunnel
+    restart: unless-stopped
+    profiles: [tunnel]
+    network_mode: host
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN:?set TUNNEL_TOKEN}
+    depends_on:
+      - tv-remote
 
 volumes:
   tv-remote-data:

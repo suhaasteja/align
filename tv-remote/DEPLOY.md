@@ -68,6 +68,29 @@ docker compose up -d
 A Raspberry Pi Zero 2 W is about the cheapest way to do this properly — plug it
 in behind the TV and forget about it.
 
+## Can a cloud host run it? (Vercel, Railway, Fly, Render…)
+
+Vercel is not the same as GitHub Pages — it *does* run server code. It still
+can't run this, for four independent reasons:
+
+1. **No route to your TV.** A function runs in a datacenter. Your TV is
+   `192.168.1.42` behind your home NAT; that address is meaningless from
+   anywhere else on the internet. This one is fatal by itself, and it applies
+   equally to Railway, Fly, Render and every other cloud.
+2. **Serverless is stateless.** The Samsung and LG adapters hold a live
+   WebSocket per TV. Functions freeze between invocations, so each keypress
+   would re-pair from scratch.
+3. **No UDP multicast.** Discovery sends SSDP to `239.255.255.250`. Serverless
+   runtimes don't do multicast.
+4. **Ephemeral disk and execution limits.** Pairing tokens are written to disk,
+   and LG's handshake waits up to 60 seconds for you to accept a prompt on the
+   TV. Neither fits a function that's billed by the 100ms and wiped after.
+
+A long-running container host (Fly with a persistent volume, say) fixes 2–4.
+It cannot fix 1. **Something has to be inside your house.**
+
+What you can move to the cloud is the *front door* — see below.
+
 ## Option B — reach it from anywhere (Tailscale)
 
 If what you actually want is "use the remote when I'm not home", the server
@@ -85,9 +108,44 @@ Free for personal use, nothing is exposed to the public internet, and no port
 forwarding. Add that URL to your home screen instead of the `192.168.x.x` one
 and it works on cellular too.
 
-Cloudflare Tunnel does the same job and can give you a real HTTPS hostname, but
-it's more setup and puts your remote behind a public URL — put an access policy
-on it if you go that way.
+### If you specifically want a public https:// URL
+
+This is the closest thing to "deploy it" that exists for this app. The server
+stays at home; a tunnel gives it a public HTTPS address, with no port
+forwarding and no inbound firewall holes — the tunnel dials outward.
+
+**Set `TV_REMOTE_PIN` before doing any of this.** A public URL with no auth is
+an open TV controller.
+
+**Cloudflare quick tunnel** — zero setup, no account, no domain:
+
+```bash
+TV_REMOTE_PIN=428913 npm start          # terminal 1
+cloudflared tunnel --url http://localhost:8477   # terminal 2
+```
+
+It prints a random `https://something.trycloudflare.com` URL that works from
+anywhere, including cellular. The URL changes every restart and Cloudflare
+doesn't intend these for permanent use, so treat it as temporary.
+
+**Tailscale Funnel** — stable public URL, free, no domain needed:
+
+```bash
+tailscale funnel 8477
+```
+
+Gives you a fixed `https://yourmachine.tailnet.ts.net` that survives restarts.
+
+**Cloudflare named tunnel** — stable URL on your own domain, and you can put
+Cloudflare Access in front so only your Google/GitHub login gets through. Best
+option if you own a domain; it's the one setup here where "public URL" and
+"actually secured" fully coexist.
+
+A compose profile is included for the named-tunnel case:
+
+```bash
+TUNNEL_TOKEN=... docker compose --profile tunnel up -d
+```
 
 ## Option C — no always-on machine
 
