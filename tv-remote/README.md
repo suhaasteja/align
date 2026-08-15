@@ -4,6 +4,39 @@ Lost the remote. Control the TV from your phone's browser instead.
 
 <img src="docs/screenshot.png" width="280" alt="The remote UI on a phone">
 
+## Is this the right tool for you?
+
+Probably not, and it's worth being honest about that before you spend an
+evening on it. If you've just lost your remote and want the TV working again,
+try these first:
+
+1. **Your iPhone may already have a remote.** Settings → Control Center → add
+   *Apple TV Remote*. It drives AirPlay 2-compatible TVs, which is most LG,
+   Samsung, Sony and Vizio sets from 2019 on. Zero installs, works right now.
+2. **Your TV maker's app** — Roku, LG ThinQ, SmartThings, Vizio SmartCast, Sony
+   SideView. Two minutes, no computer, works away from home. For most people
+   this is simply the better answer.
+3. **A replacement remote costs about $15.** An OEM or universal remote works
+   without WiFi, without your phone's battery, and without anything running.
+   For a device you use daily, that's hard to beat.
+4. **Your TV has physical buttons** — usually a joystick under the centre of
+   the panel or behind the bottom-right bezel. Enough to change input tonight.
+
+This project is worth it when one of these applies:
+
+- you don't want your TV controls routed through a vendor's cloud;
+- you want to script or automate it — it's a plain HTTP API;
+- your TV's official app is bad, which is a common complaint;
+- you already run a Pi, NAS or home server, so "an always-on machine" costs you
+  nothing;
+- you enjoy this sort of thing, which is a perfectly good reason.
+
+The real cost is that a computer has to stay on. If that's not already true in
+your house, options 1–3 are better.
+
+Already running **Home Assistant**? It has mature built-in integrations for
+every brand here, and you should use those instead of this.
+
 ## Why it works this way
 
 Phones don't have IR blasters, so nothing on your phone can pretend to be the
